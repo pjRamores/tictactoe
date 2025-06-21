@@ -77,7 +77,8 @@ class PPOAgent:
         if deterministic:
             action = valid_moves[np.argmax(valid_probs)]  # Best action
         else:
-            action = np.random.choice(valid_moves, p=valid_probs)  # Sample action
+            # action = np.random.choice(valid_moves, p=valid_probs)  # Sample action
+            action = self.get_index_with_max_value(valid_probs, valid_moves)
 
         log_prob = np.log(max(probs[action], 1e-10))  # Ensure log_prob is valid
         return action, log_prob
@@ -124,3 +125,12 @@ class PPOAgent:
 
         value_grads = tape.gradient(value_loss, self.value_model.trainable_variables)
         self.value_optimizer.apply_gradients(zip(value_grads, self.value_model.trainable_variables))
+
+    @staticmethod
+    def get_index_with_max_value(arr, whitelist):
+        if not whitelist or not arr.size:  # Check for empty inputs
+            return None
+        valid_indices = np.array(whitelist)[np.array(whitelist) < len(arr)]
+        if not valid_indices.size:
+            return None
+        return valid_indices[np.argmax(arr[valid_indices])]
