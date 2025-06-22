@@ -6,14 +6,16 @@ from tictactoe import TicTacToe
 
 
 def train_ppo():
+    policy_path = "tic_tac_toe_policy_model.h5"
+    value_path = "tic_tac_toe_value_model.h5"
     env = TicTacToe()
-    agent = PPOAgent()
-    num_episodes = 10000
+    # agent = PPOAgent()
+    agent = PPOAgent(load_models=True, policy_path=policy_path, value_path=value_path)
+    num_episodes = 5000
     max_steps = 9
     batch_size = 64
     epochs = 10
-    policy_path = "tic_tac_toe_policy_model.h5"
-    value_path = "tic_tac_toe_value_model.h5"
+    lost_count = 0
 
     for episode in range(num_episodes):
         state = env.reset()
@@ -54,10 +56,13 @@ def train_ppo():
                 agent.train_step(batch_states, batch_actions, batch_log_probs, batch_advantages, batch_returns)
 
         # if episode % 100 == 0:
-        print(f"Episode {episode}, Reward: {episode_reward}")
+        #     print(f"Episode {episode}, Reward: {episode_reward}")
+        if episode_reward < 0:
+            lost_count += 1
+            print(f"Episode: {episode}, Lost: {lost_count}, Reward: {episode_reward}, State: {state}, Action: {actions}")
 
     # Save models after training
-    # agent.save_models(policy_path, value_path)
+    agent.save_models(policy_path, value_path)
     return policy_path, value_path
 
 # Interactive Play Function
@@ -123,7 +128,6 @@ def play_game(policy_path, value_path):
 if __name__ == '__main__':
     # print("Training PPO agent...")
     policy_path, value_path = train_ppo()
-    # train_ppo()
 
     # policy_path = "tic_tac_toe_policy_model.h5"
     # value_path = "tic_tac_toe_value_model.h5"
