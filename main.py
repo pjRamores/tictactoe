@@ -6,11 +6,12 @@ from tictactoe import TicTacToe
 
 
 def train_ppo():
+    ask_human_input = True
     policy_path = "tic_tac_toe_policy_model.h5"
     value_path = "tic_tac_toe_value_model.h5"
     env = TicTacToe()
     # agent = PPOAgent()
-    agent = PPOAgent(load_models=True, policy_path=policy_path, value_path=value_path)
+    agent = PPOAgent(load_models=True, policy_path=policy_path, value_path=value_path) if input("Press l to load the model: ") == 's' else PPOAgent()
     num_episodes = 5000
     max_steps = 9
     batch_size = 64
@@ -29,8 +30,9 @@ def train_ppo():
                 break
             next_state, reward, done, _ = env.step(action)
             if not done:
-                opponent_action = random.choice(env.get_valid_moves())
-                next_state, reward, done, _ = env.step(opponent_action, player=-1)
+                # opponent_action = random.choice(env.get_valid_moves())
+                opponent_action = get_human_action(env) if ask_human_input else random.choice(env.get_valid_moves())
+                next_state, reward, done, _ = env.step(opponent_action, player=11)
             value = agent.value_model(np.array(state).reshape(1, 9)).numpy()[0, 0]
             trajectory.append((state, action, reward, log_prob, done, value))
             state = next_state
@@ -53,16 +55,23 @@ def train_ppo():
                 batch_log_probs = [log_probs[i] for i in batch_indices]
                 batch_advantages = [advantages[i] for i in batch_indices]
                 batch_returns = [returns[i] for i in batch_indices]
+                print(f"batch_states: {batch_states}, batch_actions: {batch_actions}, batch_log_probs: {batch_log_probs}, batch_advantages: {batch_advantages}, batch_returns: {batch_returns}")
                 agent.train_step(batch_states, batch_actions, batch_log_probs, batch_advantages, batch_returns)
 
+        print(f"Episode: {episode}, Reward: {episode_reward}, State: {state}, Action: {actions}")
         # if episode % 100 == 0:
         #     print(f"Episode {episode}, Reward: {episode_reward}")
         if episode_reward < 0:
             lost_count += 1
             print(f"Episode: {episode}, Lost: {lost_count}, Reward: {episode_reward}, State: {state}, Action: {actions}")
 
+        if input("Press q if you want to quit.: ") == 'q':
+            break
+
     # Save models after training
-    agent.save_models(policy_path, value_path)
+    if input("Press s to save the model: ") == 's':
+        agent.save_models(policy_path, value_path)
+
     return policy_path, value_path
 
 # Interactive Play Function
@@ -123,6 +132,22 @@ def play_game(policy_path, value_path):
             else:
                 print("It's a draw!")
             break
+
+def get_human_action(env):
+    env.render()
+    human_action = 0
+    while True:
+        try:
+            human_action = int(input("Your move (0-8): "))
+            if human_action in env.get_valid_moves():
+                break
+            print("Invalid move, try again.")
+        except ValueError:
+            print("Please enter a number between 0 and 8.")
+    return human_action
+
+def quit_or_continue():
+    return input("Press q if you want to quit.: ") == 'q'
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
