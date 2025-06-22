@@ -78,7 +78,7 @@ class PPOAgent:
             action = valid_moves[np.argmax(valid_probs)]  # Best action
         else:
             # action = np.random.choice(valid_moves, p=valid_probs)  # Sample action
-            action = self.get_index_with_max_value(valid_probs, valid_moves)
+            action = self.get_index_with_max_value(probs, valid_moves)
 
         log_prob = np.log(max(probs[action], 1e-10))  # Ensure log_prob is valid
         return action, log_prob
