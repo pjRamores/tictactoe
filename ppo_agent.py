@@ -18,16 +18,16 @@ class PPOAgent:
 
     def build_policy_model(self):
         model = models.Sequential([
-            layers.Dense(64, activation='relu', input_shape=(9,)),
-            layers.Dense(64, activation='relu'),
+            layers.Dense(9, activation='relu', input_shape=(9,)),
+            layers.Dense(9, activation='relu'),
             layers.Dense(9, activation='softmax')  # 9 actions
         ])
         return model
 
     def build_value_model(self):
         model = models.Sequential([
-            layers.Dense(64, activation='relu', input_shape=(9,)),
-            layers.Dense(64, activation='relu'),
+            layers.Dense(9, activation='relu', input_shape=(9,)),
+            layers.Dense(9, activation='relu'),
             layers.Dense(1)  # State value
         ])
         return model
