@@ -17,6 +17,7 @@ def train_ppo():
     batch_size = 64
     epochs = 10
     lost_count = 0
+    action_tracker = {}
 
     for episode in range(num_episodes):
         state = env.reset()
@@ -58,12 +59,16 @@ def train_ppo():
                 print(f"batch_states: {batch_states}, batch_actions: {batch_actions}, batch_log_probs: {batch_log_probs}, batch_advantages: {batch_advantages}, batch_returns: {batch_returns}")
                 agent.train_step(batch_states, batch_actions, batch_log_probs, batch_advantages, batch_returns)
 
-        print(f"Episode: {episode}, Reward: {episode_reward}, State: {state}, Action: {actions}")
+        if actions in action_tracker:
+            action_tracker[actions] += 1
+        else:
+            action_tracker[actions] = 1
+        print(f"Episode: {episode}, Reward: {episode_reward}, State: {state}, Action: {actions} = {action_tracker[actions]}")
         # if episode % 100 == 0:
         #     print(f"Episode {episode}, Reward: {episode_reward}")
-        if episode_reward < 0:
-            lost_count += 1
-            print(f"Episode: {episode}, Lost: {lost_count}, Reward: {episode_reward}, State: {state}, Action: {actions}")
+        # if episode_reward < 0:
+        #     lost_count += 1
+        #     print(f"Episode: {episode}, Lost: {lost_count}, Reward: {episode_reward}, State: {state}, Action: {actions}")
 
         if input("Press q if you want to quit.: ") == 'q':
             break
