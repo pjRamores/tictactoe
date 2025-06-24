@@ -50,8 +50,8 @@ class PPOAgent:
     def get_action(self, state, deterministic=False):
         state = np.array(state).reshape(1, 9)
         probs = self.policy_model(state).numpy()[0]
-        # valid_moves = [i for i in range(9) if state[0, i] == 0]
-        valid_moves = [i for i in range(9) if state[0, i] != 10 and state[0, i] != 11]
+        valid_moves = [i for i in range(9) if state[0, i] == 0]
+        # valid_moves = [i for i in range(9) if state[0, i] != 10 and state[0, i] != 11]
 
         if not valid_moves:
             # No valid moves (shouldn't happen in Tic-Tac-Toe mid-game)

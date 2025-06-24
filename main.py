@@ -33,7 +33,7 @@ def train_ppo():
             if not done:
                 # opponent_action = random.choice(env.get_valid_moves())
                 opponent_action = get_human_action(env) if ask_human_input else random.choice(env.get_valid_moves())
-                next_state, reward, done, _ = env.step(opponent_action, player=11)
+                next_state, reward, done, _ = env.step(opponent_action, player=-1)
             value = agent.value_model(np.array(state).reshape(1, 9)).numpy()[0, 0]
             trajectory.append((state, action, reward, log_prob, done, value))
             state = next_state
