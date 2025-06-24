@@ -35,8 +35,8 @@ class TicTacToe:
             if self.board[combo[0]] == self.board[combo[1]] == self.board[combo[2]] != 0:
                 self.done = True
                 self.winner = self.board[combo[0]]
-                # return self.winner, True
-                return 1 if self.winner == 10 else -1, True
+                return self.winner, True
+                # return 1 if self.winner == 10 else -1, True
         if 0 not in self.board:
         # if all(i > 8 for i in self.board):
             self.done = True
