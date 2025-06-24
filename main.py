@@ -1,6 +1,7 @@
 import numpy as np
 import random
 
+from bot_player import BotPlayer
 from ppo_agent import PPOAgent
 from tictactoe import TicTacToe
 
@@ -12,6 +13,7 @@ def train_ppo():
     env = TicTacToe()
     # agent = PPOAgent()
     agent = PPOAgent(load_models=True, policy_path=policy_path, value_path=value_path) if input("Press y to load the model: ") == 'y' else PPOAgent()
+    bot_player = BotPlayer()
     num_episodes = 5000
     max_steps = 9
     batch_size = 64
@@ -32,7 +34,9 @@ def train_ppo():
             next_state, reward, done, _ = env.step(action)
             if not done:
                 # opponent_action = random.choice(env.get_valid_moves())
-                opponent_action = get_human_action(env) if ask_human_input else random.choice(env.get_valid_moves())
+                # opponent_action = get_human_action(env) if ask_human_input else random.choice(env.get_valid_moves())
+                best_move = bot_player.get_best_move(env.board, 1, -1)
+                opponent_action = best_move[0]*3+best_move[1]
                 next_state, reward, done, _ = env.step(opponent_action, player=-1)
             value = agent.value_model(np.array(state).reshape(1, 9)).numpy()[0, 0]
             trajectory.append((state, action, reward, log_prob, done, value))
