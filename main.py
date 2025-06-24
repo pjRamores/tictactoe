@@ -11,7 +11,7 @@ def train_ppo():
     value_path = "tic_tac_toe_value_model.h5"
     env = TicTacToe()
     # agent = PPOAgent()
-    agent = PPOAgent(load_models=True, policy_path=policy_path, value_path=value_path) if input("Press l to load the model: ") == 's' else PPOAgent()
+    agent = PPOAgent(load_models=True, policy_path=policy_path, value_path=value_path) if input("Press y to load the model: ") == 'y' else PPOAgent()
     num_episodes = 5000
     max_steps = 9
     batch_size = 64
@@ -70,11 +70,11 @@ def train_ppo():
         #     lost_count += 1
         #     print(f"Episode: {episode}, Lost: {lost_count}, Reward: {episode_reward}, State: {state}, Action: {actions}")
 
-        if input("Press q if you want to quit.: ") == 'q':
+        if not continue_to_next_round():
             break
 
     # Save models after training
-    if input("Press s to save the model: ") == 's':
+    if input("Press y to save the model: ") == 'y':
         agent.save_models(policy_path, value_path)
 
     return policy_path, value_path
@@ -151,8 +151,8 @@ def get_human_action(env):
             print("Please enter a number between 0 and 8.")
     return human_action
 
-def quit_or_continue():
-    return input("Press q if you want to quit.: ") == 'q'
+def continue_to_next_round():
+    return input("Press y to continue: ") == 'y'
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
