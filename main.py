@@ -1,5 +1,6 @@
+import pandas as pd
 import numpy as np
-import random
+np.set_printoptions(legacy="1.25")
 
 from bot_player import BotPlayer
 from ppo_agent import PPOAgent
@@ -19,6 +20,7 @@ def train_ppo():
     batch_size = 64
     epochs = 10
     lost_count = 0
+    training_tracker = pd.read_csv('training_tracker.csv') if input("Press y to load the training tracker: ") == 'y' else pd.DataFrame([])
     action_tracker = {}
 
     for episode in range(num_episodes):
@@ -60,19 +62,28 @@ def train_ppo():
                 batch_log_probs = [log_probs[i] for i in batch_indices]
                 batch_advantages = [advantages[i] for i in batch_indices]
                 batch_returns = [returns[i] for i in batch_indices]
-                print(f"batch_states: {batch_states}, batch_actions: {batch_actions}, batch_log_probs: {batch_log_probs}, batch_advantages: {batch_advantages}, batch_returns: {batch_returns}")
+                # print(f"batch_states: {batch_states}, batch_actions: {batch_actions}, batch_log_probs: {batch_log_probs}, batch_advantages: {batch_advantages}, batch_returns: {batch_returns}")
                 agent.train_step(batch_states, batch_actions, batch_log_probs, batch_advantages, batch_returns)
 
-        if actions in action_tracker:
-            action_tracker[actions] += 1
-        else:
-            action_tracker[actions] = 1
-        print(f"Episode: {episode}, Reward: {episode_reward}, State: {state}, Action: {actions} = {action_tracker[actions]}")
         # if episode % 100 == 0:
         #     print(f"Episode {episode}, Reward: {episode_reward}")
         # if episode_reward < 0:
         #     lost_count += 1
         #     print(f"Episode: {episode}, Lost: {lost_count}, Reward: {episode_reward}, State: {state}, Action: {actions}")
+        if actions in action_tracker:
+            action_tracker[actions] += 1
+        else:
+            action_tracker[actions] = 1
+        print(f"Episode: {episode}, Reward: {episode_reward}, State: {state}, Action: {actions} = {action_tracker[actions]}")
+        training_record = {
+            "episode": episode,
+            "reward": episode_reward,
+            "state": state,
+            "action": actions,
+            "action_count": action_tracker[actions]
+        }
+        new_training = pd.DataFrame([training_record])
+        training_tracker = pd.concat([training_tracker, new_training], ignore_index=True)
 
         if not continue_to_next_round():
             break
@@ -80,6 +91,9 @@ def train_ppo():
     # Save models after training
     if input("Press y to save the model: ") == 'y':
         agent.save_models(policy_path, value_path)
+
+    if input("Press y to save the training tracker: ") == 'y':
+        training_tracker.to_csv('training_tracker.csv', index=False)
 
     return policy_path, value_path
 

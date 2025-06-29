@@ -2,6 +2,8 @@ import os
 
 import numpy as np
 import tensorflow as tf
+print("tensorflow version: ", tf.__version__)
+from keras import Input
 from tensorflow.keras import layers, models
 
 class PPOAgent:
@@ -18,7 +20,8 @@ class PPOAgent:
 
     def build_policy_model(self):
         model = models.Sequential([
-            layers.Dense(9, activation='relu', input_shape=(9,)),
+            Input(shape=(9,)),
+            layers.Dense(9, activation='relu'),
             layers.Dense(9, activation='relu'),
             layers.Dense(9, activation='softmax')  # 9 actions
         ])
@@ -26,7 +29,8 @@ class PPOAgent:
 
     def build_value_model(self):
         model = models.Sequential([
-            layers.Dense(9, activation='relu', input_shape=(9,)),
+            Input(shape=(9,)),
+            layers.Dense(9, activation='relu'),
             layers.Dense(9, activation='relu'),
             layers.Dense(1)  # State value
         ])
@@ -48,7 +52,15 @@ class PPOAgent:
             raise FileNotFoundError("Model files not found")
 
     def get_action(self, state, deterministic=False):
-        state = np.array(state).reshape(1, 9)
+        # print(">>> State shape:", state.shape, type(state), state)
+        # state = np.array(state).reshape(1, 9)
+        # state = np.array(state)  # Ensure state is a NumPy array
+        if state.ndim == 1:  # If state is 1D, add batch dimension
+            state = state[np.newaxis, :]  # Shape: (1, state_dim)
+        # print("<<< State shape:", state.shape, type(state), state)
+
+        # print("policy model input share: ", self.policy_model.input_shape)
+        # print("policy model: ", self.policy_model.summary(expand_nested=True, show_trainable=True))
         probs = self.policy_model(state).numpy()[0]
         valid_moves = [i for i in range(9) if state[0, i] == 0]
         # valid_moves = [i for i in range(9) if state[0, i] != 10 and state[0, i] != 11]
