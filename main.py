@@ -23,6 +23,7 @@ def train_ppo():
     batch_size = 64
     epochs = 10
     lost_count = 0
+    won_count = 0
     training_tracker = pd.read_csv('training_tracker.csv') if track_training and input("Press y to load the training tracker: ") == 'y' else pd.DataFrame([])
     action_tracker = {}
     for _, row in training_tracker.iterrows():
@@ -98,10 +99,14 @@ def train_ppo():
                 break
         else:
             if episode % 100 == 0:
-                print(f"Episode {episode}, Reward: {episode_reward}")
+                print(f"Episode {episode}, Won: {won_count}, Lost: {lost_count}")
+            if episode_reward > 0:
+                won_count += 1
             if episode_reward < 0:
                 lost_count += 1
-                print(f"Episode: {episode}, Lost: {lost_count}, Reward: {episode_reward}, State: {state}, Action: {actions}")
+                print(f"Episode: {episode}, Won: {won_count}, Lost: {lost_count}, Reward: {episode_reward}, State: {state}, Action: {actions}")
+
+    print(f"Won: {won_count}, Lost: {lost_count}")
 
     # Save models after training
     if input("Press y to save the model: ") == 'y':
