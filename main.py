@@ -22,8 +22,15 @@ def train_ppo():
     lost_count = 0
     training_tracker = pd.read_csv('training_tracker.csv') if input("Press y to load the training tracker: ") == 'y' else pd.DataFrame([])
     action_tracker = {}
+    for _, row in training_tracker.iterrows():
+        if row["action"] in action_tracker:
+            action_tracker[row["action"]] += 1
+        else:
+            action_tracker[row["action"]] = 1
 
-    for episode in range(num_episodes):
+
+
+    for episode in range(training_tracker.shape[0], num_episodes + training_tracker.shape[0]):
         state = env.reset()
         trajectory = []
         episode_reward = 0
