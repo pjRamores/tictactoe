@@ -8,6 +8,7 @@ from tictactoe import TicTacToe
 
 
 def train_ppo():
+    global opponent_action
     ask_human_input = True
     policy_path = "tic_tac_toe_policy_model.h5"
     value_path = "tic_tac_toe_value_model.h5"
@@ -48,14 +49,14 @@ def train_ppo():
                 opponent_action = best_move[0]*3+best_move[1]
                 next_state, reward, done, _ = env.step(opponent_action, player=-1)
             value = agent.value_model(np.array(state).reshape(1, 9)).numpy()[0, 0]
-            trajectory.append((state, action, reward, log_prob, done, value))
+            trajectory.append((state, action, opponent_action, reward, log_prob, done, value))
             state = next_state
             episode_reward += reward
             if done:
                 break
 
         # Compute advantages and returns
-        states, actions, rewards, log_probs, dones, values = zip(*trajectory)
+        states, actions, opponent_actions, rewards, log_probs, dones, values = zip(*trajectory)
         next_value = agent.value_model(np.array(state).reshape(1, 9)).numpy()[0, 0] if not done else 0
         advantages, returns = agent.compute_gae(rewards, list(values), next_value, dones)
 
@@ -86,8 +87,11 @@ def train_ppo():
             "episode": episode,
             "reward": episode_reward,
             "state": state,
-            "action": actions,
-            "action_count": action_tracker[actions]
+            "actions": actions,
+            "action_count": action_tracker[actions],
+            "opponent_actions": opponent_actions,
+            "log_probs": log_probs,
+            "values": values
         }
         new_training = pd.DataFrame([training_record])
         training_tracker = pd.concat([training_tracker, new_training], ignore_index=True)
