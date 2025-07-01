@@ -16,7 +16,6 @@ def train_ppo():
     policy_path = "tic_tac_toe_policy_model.h5"
     value_path = "tic_tac_toe_value_model.h5"
     env = TicTacToe()
-    # agent = PPOAgent()
     agent = PPOAgent(load_models=True, policy_path=policy_path, value_path=value_path) if input("Press y to load the model: ") == 'y' else PPOAgent()
     bot_player = BotPlayer()
     max_steps = 9
@@ -203,5 +202,3 @@ if __name__ == '__main__':
     # policy_path = "tic_tac_toe_policy_model.h5"
     # value_path = "tic_tac_toe_value_model.h5"
     # play_game(policy_path, value_path)
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
