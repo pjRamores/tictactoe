@@ -32,8 +32,6 @@ def train_ppo():
         else:
             action_tracker[row["action"]] = 1
 
-
-
     for episode in range(training_tracker.shape[0], num_episodes + training_tracker.shape[0]):
         state = env.reset()
         trajectory = []
