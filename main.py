@@ -1,3 +1,5 @@
+import random
+
 import pandas as pd
 import numpy as np
 np.set_printoptions(legacy="1.25")
@@ -8,9 +10,10 @@ from tictactoe import TicTacToe
 
 
 def train_ppo():
-    human_opponent = False
-    track_training = False
-    num_episodes = 1000
+    TRACK_TRAINING = False
+    NUM_EPISODES = 200
+    OPPONENT = 'BOT' # BOT, HUMAN, or RANDOM (random picker)
+    FIRST_MOVE = 'OPPONENT' # AGENT, OPPONENT, or RANDOM (either AGENT or OPPONENT)
 
     global opponent_action
     policy_path = "tic_tac_toe_policy_model.h5"
@@ -24,7 +27,7 @@ def train_ppo():
     won_count = 0
     lost_count = 0
     draw_count = 0
-    training_tracker = pd.read_csv('training_tracker.csv') if track_training and input("Press y to load the training tracker: ") == 'y' else pd.DataFrame([])
+    training_tracker = pd.read_csv('training_tracker.csv') if TRACK_TRAINING and input("Press y to load the training tracker: ") == 'y' else pd.DataFrame([])
     action_tracker = {}
     for _, row in training_tracker.iterrows():
         if row["action"] in action_tracker:
@@ -32,23 +35,35 @@ def train_ppo():
         else:
             action_tracker[row["action"]] = 1
 
-    for episode in range(training_tracker.shape[0], num_episodes + training_tracker.shape[0]):
+    for episode in range(training_tracker.shape[0], NUM_EPISODES + training_tracker.shape[0]):
+        print("\n\n")
         state = env.reset()
         trajectory = []
         episode_reward = 0
+        first_mover = random.choice(['AGENT', 'OPPONENT']) if FIRST_MOVE == 'RANDOM' else FIRST_MOVE
 
         # Collect trajectory against random opponent
         for _ in range(max_steps):
-            action, log_prob = agent.get_action(state)
-            if action is None:
-                break
-            next_state, reward, done, _ = env.step(action)
-            if not done:
-                # opponent_action = random.choice(env.get_valid_moves())
-                # opponent_action = get_human_action(env) if ask_human_input else random.choice(env.get_valid_moves())
+            if first_mover == 'AGENT':
+                action, log_prob = agent.get_action(state)
+                if action is None:
+                    break
+                next_state, reward, done, _ = env.step(action)
+                if not done:
+                    # opponent_action = random.choice(env.get_valid_moves())
+                    # opponent_action = get_human_action(env) if ask_human_input else random.choice(env.get_valid_moves())
+                    best_move = bot_player.get_best_move(env.board, 1, -1)
+                    opponent_action = best_move[0]*3+best_move[1]
+                    next_state, reward, done, _ = env.step(opponent_action, player=-1)
+            else:
                 best_move = bot_player.get_best_move(env.board, 1, -1)
-                opponent_action = best_move[0]*3+best_move[1]
+                opponent_action = best_move[0] * 3 + best_move[1]
+                if opponent_action is None:
+                    break
                 next_state, reward, done, _ = env.step(opponent_action, player=-1)
+                if not done:
+                    action, log_prob = agent.get_action(next_state)
+                    next_state, reward, done, _ = env.step(action)
             value = agent.value_model(np.array(state).reshape(1, 9)).numpy()[0, 0]
             trajectory.append((state, action, opponent_action, reward, log_prob, done, value))
             state = next_state
@@ -74,7 +89,7 @@ def train_ppo():
                 # print(f"batch_states: {batch_states}, batch_actions: {batch_actions}, batch_log_probs: {batch_log_probs}, batch_advantages: {batch_advantages}, batch_returns: {batch_returns}")
                 agent.train_step(batch_states, batch_actions, batch_log_probs, batch_advantages, batch_returns)
 
-        if track_training:
+        if TRACK_TRAINING:
             if actions in action_tracker:
                 action_tracker[actions] += 1
             else:
@@ -104,15 +119,15 @@ def train_ppo():
                 draw_count += 1
             elif episode_reward < 0:
                 lost_count += 1
-                print(f"Episode: {episode}, Won: {won_count}, Lost: {lost_count}, Reward: {episode_reward}, State: {state}, Action: {actions}")
+                print(f"Episode: {episode}, Won: {won_count}, Lost: {lost_count}, Reward: {episode_reward}, State: {state}, Actions: {actions}, Opponent Action: {opponent_actions}")
 
     print(f"Won: {won_count}, Lost: {lost_count}, Draw: {draw_count}")
 
     # Save models after training
-    if input("Press y to save the model: ") == 'y':
+    if input("\n\nPress y to save the model: ") == 'y':
         agent.save_models(policy_path, value_path)
 
-    if track_training and input("Press y to save the training tracker: ") == 'y':
+    if TRACK_TRAINING and input("Press y to save the training tracker: ") == 'y':
         training_tracker.to_csv('training_tracker.csv', index=False)
 
     return policy_path, value_path

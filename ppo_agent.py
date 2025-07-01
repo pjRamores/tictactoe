@@ -62,6 +62,8 @@ class PPOAgent:
         # print("policy model input share: ", self.policy_model.input_shape)
         # print("policy model: ", self.policy_model.summary(expand_nested=True, show_trainable=True))
         probs = self.policy_model(state).numpy()[0]
+        # print('probs', probs)
+        print(", ".join(f"{idx}={probs[idx]}" for idx in np.argsort(probs)[::-1]))
         valid_moves = [i for i in range(9) if state[0, i] == 0]
         # valid_moves = [i for i in range(9) if state[0, i] != 10 and state[0, i] != 11]
 
@@ -90,8 +92,8 @@ class PPOAgent:
         if deterministic:
             action = valid_moves[np.argmax(valid_probs)]  # Best action
         else:
-            action = np.random.choice(valid_moves, p=valid_probs)  # Sample action
-            # action = self.get_index_with_max_value(probs, valid_moves)
+            # action = np.random.choice(valid_moves, p=valid_probs)  # Sample action
+            action = self.get_index_with_max_value(probs, valid_moves)
 
         log_prob = np.log(max(probs[action], 1e-10))  # Ensure log_prob is valid
         return action, log_prob
